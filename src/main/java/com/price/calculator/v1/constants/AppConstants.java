@@ -1,4 +1,4 @@
-package com.price.calculator.v1.Constants;
+package com.price.calculator.v1.constants;
 
 public class AppConstants {
 

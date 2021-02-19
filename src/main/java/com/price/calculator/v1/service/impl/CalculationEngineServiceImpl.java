@@ -1,9 +1,10 @@
-package com.price.calculator.v1.service;
+package com.price.calculator.v1.service.impl;
 
-import com.price.calculator.v1.Constants.AppConstants;
+import com.price.calculator.v1.constants.AppConstants;
 import com.price.calculator.v1.model.HorseShoe;
 import com.price.calculator.v1.model.Item;
 import com.price.calculator.v1.model.PenguinEar;
+import com.price.calculator.v1.service.CalculationEngineService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 @Service
-public class CalculationEngineServiceImpl implements CalculationEngineService{
+public class CalculationEngineServiceImpl implements CalculationEngineService {
 
     private Map<String,Item> items;
     public CalculationEngineServiceImpl(){
