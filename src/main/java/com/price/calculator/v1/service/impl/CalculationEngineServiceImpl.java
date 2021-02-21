@@ -1,60 +1,64 @@
 package com.price.calculator.v1.service.impl;
 
 import com.price.calculator.v1.constants.AppConstants;
-import com.price.calculator.v1.model.HorseShoe;
+import com.price.calculator.v1.dto.ItemCartDTO;
 import com.price.calculator.v1.model.Item;
-import com.price.calculator.v1.model.PenguinEar;
+import com.price.calculator.v1.repository.ItemRepository;
 import com.price.calculator.v1.service.CalculationEngineService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.IntStream;
+
+import static com.price.calculator.v1.constants.AppConstants.*;
 
 @Service
 public class CalculationEngineServiceImpl implements CalculationEngineService {
 
-    private Map<String,Item> items;
-    public CalculationEngineServiceImpl(){
-        this.items=new HashMap<>();
-        items.put(AppConstants.HORSESHOE,new HorseShoe());
-        items.put(AppConstants.PENGUINEAR,new PenguinEar());
-    }
+    private final ItemRepository itemRepository;
 
-    //using float does not cause precision problems here due to 175/20,825/5 and multiply 0.9,1.3
-    @Override
-    public float calculatePriceForNumberOfItems(String itemName,int count){
-        Item item=this.items.get(itemName);
-        float unitPrice=(float)item.getCartonPrice()/item.getCartonSize();
-        int remainder=count%item.getCartonSize();
-        int cartons=count/item.getCartonSize();
-        float price=0;
-
-        if(count<item.getCartonSize()){
-            price+=(float) (unitPrice*(float) count * 1.3);
-        }
-        else if(count>=item.getCartonSize() && count<3*item.getCartonSize()){
-            price+=(float) (cartons)*item.getCartonPrice();
-            price+=(float) unitPrice* remainder * 1.3;
-        }
-        else{
-            price+=(float) cartons*item.getCartonPrice()*0.9;
-            price+=(float) unitPrice* remainder * 1.3;
-        }
-        return price;
+    public CalculationEngineServiceImpl(final ItemRepository itemRepository) {
+        this.itemRepository = itemRepository;
     }
 
     @Override
-    public float buildTotalPriceForCart(int horseShoeCount,int PenguinEarCount){
-        return calculatePriceForNumberOfItems(AppConstants.PENGUINEAR,PenguinEarCount)+
-                calculatePriceForNumberOfItems(AppConstants.HORSESHOE,horseShoeCount);
+    public float calculatePriceForUnitsOfItemsForPriceList(Item item, int count) {
+        float unitPrice = (float) item.getCartonPrice() / item.getCartonSize();
+        int remainder = count % item.getCartonSize();
+        int cartons = count / item.getCartonSize();
+        return calculatePriceForUnitsOfItems(item, remainder) + calculatePriceForCartonsOfItems(item, cartons);
     }
 
     @Override
-    public float[] pricesList(String itemName){
-        float[] prices=new float[50];
-        IntStream.rangeClosed(1,50).forEach(i->{prices[i-1]=this.calculatePriceForNumberOfItems(itemName,i);});
-        int a= prices.length;
+    public float calculatePriceForUnitsOfItems(Item item, int count) {
+        float unitPrice = (float) item.getCartonPrice() / item.getCartonSize();
+        return (float) (unitPrice * (float) count * 1.3);
+
+    }
+
+    @Override
+    public float calculatePriceForCartonsOfItems(Item item, int count) {
+        if (count >= CART_COUNT_FOR_DISCOUNT) {
+            return (float) (item.getCartonPrice() * count * MULTI_CART_DISCOUNT);
+        } else return (float) (item.getCartonPrice() * count);
+    }
+
+    @Override
+    public float buildTotalPriceForCart(ItemCartDTO itemCartDTO) {
+        Item horseShoe = itemRepository.findByName(HORSESHOE).get();
+        Item penguinEar = itemRepository.findByName(PENGUINEAR).get();
+        return calculatePriceForUnitsOfItems(horseShoe, itemCartDTO.getHorseShoeUnits()) +
+                calculatePriceForUnitsOfItems(penguinEar, itemCartDTO.getPenguinEarUnits()) +
+                calculatePriceForCartonsOfItems(horseShoe, itemCartDTO.getHorseShoeCartons()) +
+                calculatePriceForCartonsOfItems(penguinEar, itemCartDTO.getPenguinEarCartons());
+    }
+
+    @Override
+    public float[] pricesList(String itemName) {
+        Item item = itemRepository.findByName(itemName).get();
+        float[] prices = new float[AppConstants.PRICE_LIST_SIZE];
+        IntStream.rangeClosed(1, AppConstants.PRICE_LIST_SIZE).forEach(i ->
+                prices[i - 1] = this.calculatePriceForUnitsOfItemsForPriceList(item, i)
+        );
         return prices;
     }
 
