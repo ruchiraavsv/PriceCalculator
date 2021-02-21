@@ -26,20 +26,20 @@ public class CalculationEngineServiceImpl implements CalculationEngineService {
     public float calculatePriceForNumberOfItems(String itemName,int count){
         Item item=this.items.get(itemName);
         float unitPrice=(float)item.getCartonPrice()/item.getCartonSize();
+        int remainder=count%item.getCartonSize();
+        int cartons=count/item.getCartonSize();
         float price=0;
+
         if(count<item.getCartonSize()){
             price+=(float) (unitPrice*(float) count * 1.3);
         }
         else if(count>=item.getCartonSize() && count<3*item.getCartonSize()){
-            int remainder=count%item.getCartonSize();
-            price+=(float) (count%item.getCartonSize())*item.getCartonPrice();
-            price+=unitPrice* remainder * 1.3;
+            price+=(float) (cartons)*item.getCartonPrice();
+            price+=(float) unitPrice* remainder * 1.3;
         }
         else{
-            int remainder=count%item.getCartonSize();
-            int cartons=count/item.getCartonSize();
-            price+=(float) cartons*item.getCartonPrice()+0.9;
-            price+=unitPrice* remainder * 1.3;
+            price+=(float) cartons*item.getCartonPrice()*0.9;
+            price+=(float) unitPrice* remainder * 1.3;
         }
         return price;
     }
@@ -47,13 +47,14 @@ public class CalculationEngineServiceImpl implements CalculationEngineService {
     @Override
     public float buildTotalPriceForCart(int horseShoeCount,int PenguinEarCount){
         return calculatePriceForNumberOfItems(AppConstants.PENGUINEAR,PenguinEarCount)+
-                calculatePriceForNumberOfItems(AppConstants.HORSESHOE,PenguinEarCount);
+                calculatePriceForNumberOfItems(AppConstants.HORSESHOE,horseShoeCount);
     }
 
     @Override
     public float[] pricesList(String itemName){
         float[] prices=new float[50];
-        IntStream.rangeClosed(1,50).forEach(i->{prices[i]=this.calculatePriceForNumberOfItems(itemName,i);});
+        IntStream.rangeClosed(1,50).forEach(i->{prices[i-1]=this.calculatePriceForNumberOfItems(itemName,i);});
+        int a= prices.length;
         return prices;
     }
 

@@ -3,11 +3,11 @@ package com.price.calculator.v1.resource;
 import com.price.calculator.v1.service.CalculationEngineService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/priceCalculator")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/price-calculator")
 public class PriceController {
 
     private final CalculationEngineService calculationEngineService;
@@ -16,12 +16,14 @@ public class PriceController {
         this.calculationEngineService=calculationEngineService;
     }
 
-    public ResponseEntity<float[]> getPriceList(String itemName){
+    @GetMapping("price-list/{itemName}")
+    public ResponseEntity<float[]> getPriceList(@PathVariable String itemName){
         return new ResponseEntity<>(this.calculationEngineService.pricesList(itemName), HttpStatus.OK);
     }
 
-    public ResponseEntity<Float> getBuiltPrice(int horseShoeCount,int PenguinEarCount){
-        return new ResponseEntity<>(this.calculationEngineService.buildTotalPriceForCart(horseShoeCount,PenguinEarCount),HttpStatus.OK);
+    @PostMapping("price-total")
+    public ResponseEntity<Float> getBuiltPrice(@RequestBody int[] itemCounts){
+        return new ResponseEntity<>(this.calculationEngineService.buildTotalPriceForCart(itemCounts[0],itemCounts[1]),HttpStatus.OK);
     }
 
 }
